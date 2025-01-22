@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tow Truck Charge Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 400px; margin: auto; }
+        label, input { display: block; width: 100%; margin-bottom: 10px; }
+        button { padding: 10px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Tow Truck Charge Calculator</h2>
+        <label for="pickupAddress">Pick Up Address:</label>
+        <input type="text" id="pickupAddress" placeholder="Enter Pick-Up Address">
+
+        <label for="dropoffAddress">Drop Off Address:</label>
+        <input type="text" id="dropoffAddress" placeholder="Enter Drop-Off Address">
+
+        <label for="mileage">Miles Towed:</label>
+        <input type="number" id="mileage" value="10" disabled>
+
+        <label for="baseFee">Base Hook-up Fee ($):</label>
+        <input type="number" id="baseFee" value="75">
+
+        <label for="ratePerMile">Rate per Mile ($):</label>
+        <input type="number" id="ratePerMile" value="5">
+
+        <label for="afterHours">After-Hours Fee ($):</label>
+        <input type="number" id="afterHours" value="0">
+
+        <label for="winching">Winching/Recovery Fee ($):</label>
+        <input type="number" id="winching" value="0">
+
+        <button onclick="calculateCharge()">Calculate</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let map;
+        let geocoder;
+
+        function initMap() {
+            geocoder = new google.maps.Geocoder();
+        }
+
+        function calculateDistance() {
+            const pickupAddress = document.getElementById('pickupAddress').value;
+            const dropoffAddress = document.getElementById('dropoffAddress').value;
+
+            if (pickupAddress && dropoffAddress) {
+                geocoder.geocode({ 'address': pickupAddress }, (results, status) => {
+                    if (status === 'OK') {
+                        const pickupLocation = results[0].geometry.location;
+                        geocoder.geocode({ 'address': dropoffAddress }, (results, status) => {
+                            if (status === 'OK') {
+                                const dropoffLocation = results[0].geometry.location;
+                                const distance = google.maps.geometry.spherical.computeDistanceBetween(pickupLocation, dropoffLocation) / 1609.344; // Convert meters to miles
+                                document.getElementById('mileage').value = distance.toFixed(2);
+                                calculateCharge(); // Recalculate charge after distance is determined
+                            } else {
+                                alert('Geocode was not successful for the following reason: ' + status);
+                            }
+                        });
+                    } else {
+                        alert('Geocode was not successful for the following reason: ' + status);
+                    }
+                });
+            }
+        }
+
+        function calculateCharge() {
+            let baseFee = parseFloat(document.getElementById('baseFee').value) || 0;
+            let mileage = parseFloat(document.getElementById('mileage').value) || 0;
+            let ratePerMile = parseFloat(document.getElementById('ratePerMile').value) || 0;
+            let afterHours = parseFloat(document.getElementById('afterHours').value) || 0;
+            let winching = parseFloat(document.getElementById('winching').value) || 0;
+
+            let totalCost = baseFee + (mileage * ratePerMile) + afterHours + winching;
+            document.getElementById('result').innerText = `Total Charge: $${totalCost.toFixed(2)}`;
+        }
+
+        // Load the Google Maps API with your API Key
+        function loadScript() {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBXDJ4fNGcawrGT3yNZJLm1_XllrrHRsCc&callback=initMap&libraries=geometry`;
+
+            document.body.appendChild(script);
+        }
+
+        window.onload = loadScript;
+    </script>
+</body>
+</html>
